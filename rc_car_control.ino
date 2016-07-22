@@ -1,12 +1,14 @@
+#define FullSpeed 255
+
 // foward --------------------------------------
 const int Channel0_MAX = 1050; //1094=1104-10
-//const int Channel0_MID = 1504;
+const int Channel0_MID = 1504;
 const int Channel0_MIN = 1958; //1948+10
 int Channel0_interval = 0;
 
 // right and left -------------------------------
 const int Channel1_MAX = 1950; //1940+10
-//const int Channel1_MID = 1520;
+const int Channel1_MID = 1520;
 const int Channel1_MIN = 1086; //1096-10
 int Channel1_interval = 0;
 
@@ -24,8 +26,8 @@ void setup() {
   PCMSK0 |= (1 << PCINT0);
   PCMSK0 |= (1 << PCINT1);
   Serial.begin(9600);
-  Channel0_interval = abs(Channel0_MAX-Channel0_MIN);
-  Channel1_interval = abs(Channel1_MAX-Channel1_MIN);  
+  Channel0_interval = abs(Channel0_MAX-Channel0_MIN)*0.5;
+  Channel1_interval = abs(Channel1_MAX-Channel1_MIN)*0.5;  
 }
 
 void loop() {
@@ -60,8 +62,8 @@ ISR(PCINT0_vect) {
 }
 
 void print() {
-  input_percent[0] = ((float)input[0]-(float)Channel0_MAX)/(float)Channel0_interval;
-  input_percent[1] = ((float)input[1]-(float)Channel1_MIN)/(float)Channel1_interval;
+  input_percent[0] = ((float)input[0]-(float)Channel0_MID)/(float)Channel0_interval;
+  input_percent[1] = ((float)input[1]-(float)Channel1_MID)/(float)Channel1_interval;
   Serial.print(input_percent[0]);
   Serial.print(" - ");
   Serial.println(input_percent[1]);
