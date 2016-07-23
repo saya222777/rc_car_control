@@ -1,5 +1,5 @@
-#define FullSpeed 255
-#define HalfSpeed 127
+const int FullSpeed = 255;
+const int HalfSpeed = 127;
 
 #define L_Wheel_MAX_Pin 3
 #define L_Wheel_MIN_Pin 9
@@ -32,6 +32,10 @@ void setup() {
   PCMSK0 |= (1 << PCINT0);
   PCMSK0 |= (1 << PCINT1);
   Serial.begin(9600);
+  pinMode(L_Wheel_MAX_Pin, OUTPUT);
+  pinMode(L_Wheel_MIN_Pin, OUTPUT);
+  pinMode(R_Wheel_MAX_Pin, OUTPUT);
+  pinMode(R_Wheel_MIN_Pin, OUTPUT);
   Channel0_interval = abs(Channel0_MAX-Channel0_MIN)*0.5;
   Channel1_interval = abs(Channel1_MAX-Channel1_MIN)*0.5;  
 }
@@ -63,28 +67,33 @@ ISR(PCINT0_vect) {
   else if(last_channel[1] == 1 && !(PINB & B00000010) ) {
     last_channel[1] = 0;
     input[1] = timer[0] - timer[2];
-    if (input[1]<Channel1_MIN) input[1]=Channel1_MIN;
-    if (input[1]>Channel1_MAX) input[1]=Channel1_MAX;
+    if (input[1] < Channel1_MIN) input[1] = Channel1_MIN;
+    if (input[1] > Channel1_MAX) input[1] = Channel1_MAX;
   }
 }
 
 void print() {
   input_percent[0] = -((float)input[0]-(float)Channel0_MID)/(float)Channel0_interval;
   input_percent[1] = -((float)input[1]-(float)Channel1_MID)/(float)Channel1_interval;
-  Serial.print(input_percent[0]);
-  Serial.print(" - ");
-  Serial.println(input_percent[1]);
+  // Serial.print(input_percent[0]);
+  // Serial.print(" - ");
+  // Serial.println(input_percent[1]);
+  SpeedUpdate();
 }
 
 void SpeedUpdate() {
  
-  L_Wheel = input_percent[0]*FullSpeed + input_percent[1]*HalfSpeed;
-  R_Wheel = input_percent[0]*FullSpeed - input_percent[1]*HalfSpeed;
+  L_Wheel = input_percent[0]*FullSpeed - input_percent[1]*HalfSpeed;
+  R_Wheel = input_percent[0]*FullSpeed + input_percent[1]*HalfSpeed;
   
   if (L_Wheel >  FullSpeed) L_Wheel =  FullSpeed;
   if (L_Wheel < -FullSpeed) L_Wheel = -FullSpeed;
   if (R_Wheel >  FullSpeed) R_Wheel =  FullSpeed;
   if (R_Wheel < -FullSpeed) R_Wheel = -FullSpeed;
+  
+  // Serial.print(L_Wheel);
+  // Serial.print(" - ");
+  // Serial.println(R_Wheel);
   
   if (L_Wheel > 0) {
     analogWrite(L_Wheel_MAX_Pin, L_Wheel);
@@ -102,5 +111,4 @@ void SpeedUpdate() {
     analogWrite(R_Wheel_MAX_Pin, 0);
     analogWrite(R_Wheel_MIN_Pin, -R_Wheel);
   }
-  
 }
