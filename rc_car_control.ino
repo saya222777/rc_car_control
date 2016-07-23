@@ -1,4 +1,10 @@
 #define FullSpeed 255
+#define HalfSpeed 127
+
+#define L_Wheel_MAX_Pin 3
+#define L_Wheel_MIN_Pin 9
+#define R_Wheel_MAX_Pin 10
+#define R_Wheel_MIN_Pin 11
 
 // foward --------------------------------------
 const int Channel0_MAX = 1050; //1094=1104-10
@@ -13,8 +19,8 @@ const int Channel1_MIN = 1086; //1096-10
 int Channel1_interval = 0;
 
 // Speed output ---------------------------------
-int RightWheel = 0;
-int LeftWheel = 0;
+int R_Wheel = 0;
+int L_Wheel = 0;
 
 unsigned long timer[5];
 byte last_channel[2];
@@ -32,6 +38,7 @@ void setup() {
 
 void loop() {
   print();
+  SpeedUpdate();
 }
 
 ISR(PCINT0_vect) {
@@ -62,13 +69,38 @@ ISR(PCINT0_vect) {
 }
 
 void print() {
-  input_percent[0] = ((float)input[0]-(float)Channel0_MID)/(float)Channel0_interval;
-  input_percent[1] = ((float)input[1]-(float)Channel1_MID)/(float)Channel1_interval;
+  input_percent[0] = -((float)input[0]-(float)Channel0_MID)/(float)Channel0_interval;
+  input_percent[1] = -((float)input[1]-(float)Channel1_MID)/(float)Channel1_interval;
   Serial.print(input_percent[0]);
   Serial.print(" - ");
   Serial.println(input_percent[1]);
 }
 
 void SpeedUpdate() {
+ 
+  L_Wheel = input_percent[0]*FullSpeed + input_percent[1]*HalfSpeed;
+  R_Wheel = input_percent[0]*FullSpeed - input_percent[1]*HalfSpeed;
+  
+  if (L_Wheel >  FullSpeed) L_Wheel =  FullSpeed;
+  if (L_Wheel < -FullSpeed) L_Wheel = -FullSpeed;
+  if (R_Wheel >  FullSpeed) R_Wheel =  FullSpeed;
+  if (R_Wheel < -FullSpeed) R_Wheel = -FullSpeed;
+  
+  if (L_Wheel > 0) {
+    analogWrite(L_Wheel_MAX_Pin, L_Wheel);
+    analogWrite(L_Wheel_MIN_Pin, 0);
+  }
+  if (L_Wheel < 0) {
+    analogWrite(L_Wheel_MAX_Pin, 0);
+    analogWrite(L_Wheel_MIN_Pin, -L_Wheel);
+  }
+  if (R_Wheel > 0) {
+    analogWrite(R_Wheel_MAX_Pin, R_Wheel);
+    analogWrite(R_Wheel_MIN_Pin, 0);
+  }
+  if (R_Wheel < 0) {
+    analogWrite(R_Wheel_MAX_Pin, 0);
+    analogWrite(R_Wheel_MIN_Pin, -R_Wheel);
+  }
   
 }
